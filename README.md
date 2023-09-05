@@ -1,4 +1,4 @@
-# Home-Price-Prediction
+# DataScience_Home-Price-Prediction
 ## Description
 Everyone who wants to buy a house has different criteria. Number of rooms, number of bathrooms, distance to the city center, ease of transportation, etc.  How does the combination of all these criteria determine the price of a house?
 This project aims to create a house price prediction model with 79 explanatory variables for residential homes in Ames, Iowa.  In the project, the data was prepared for the machine learning model through data analysis and variable engineering. Then different machine learning models were tested and the best one was selected. 
