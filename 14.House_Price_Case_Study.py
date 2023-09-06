@@ -1,3 +1,10 @@
+########################## HOUSE PRICE PREDICTION PROJECT  ###########################
+# This project aims to create a house price prediction model
+# with 79 explanatory variables for residential homes in Ames, Iowa.
+# In the project, the data was prepared for the machine learning model through data analysis and variable engineering.
+# Then different machine learning models were tested and the best one was selected.
+
+
 ########################## Import Library and Settings  ###########################
 import pandas as pd
 import numpy as np
@@ -26,7 +33,7 @@ pd.set_option('display.max_rows', 100)
 pd.set_option('display.width', 500)
 pd.set_option('display.float_format', lambda x: '%.3f' % x)
 
-path = "C:\\Users\\hseym\\PycharmProjects\\pythonProject1\\miuul_homework\\datasets\\home_price"
+path = "C:\\Users\\hseym\\PycharmProjects\\pythonProject1\\datasets\\home_price"
 os.chdir(path)
 
 ########################## Loading  The Data  ###########################
@@ -211,6 +218,7 @@ for col in num_cols:
     num_summary(df, col, plot = True)
 for col in num_cols[:3]:
     num_summary(df, col, plot = True)
+
 
 ########################## Target Analysis ###########################
 def target_summary_with_cat(dataframe, target, categorical_col):
@@ -477,6 +485,7 @@ new_df.shape
 
 new_df.info()
 
+
 ########################## Standardization ###########################
 standard_col = [col for col in new_df.columns if new_df[col].dtype not in ["int32", "int64", "uint8"]
                 or new_df[col].max() > 10]
@@ -492,6 +501,7 @@ new_df.head()
 
 new_df["SalePrice"] = np.log(new_df["SalePrice"])
 
+
 ########################## Test Train Split ###########################
 train_df = new_df.loc[new_df["SalePrice"].notna()]
 test_df = new_df.loc[new_df["SalePrice"].isna()].reset_index(drop = True)
@@ -500,6 +510,7 @@ test_df.shape
 
 y = train_df["SalePrice"]
 X = train_df.drop("SalePrice", axis = 1)
+
 
 ########################## Model Selection ###########################
 models = [('LR', LinearRegression()),
@@ -521,6 +532,7 @@ for name, regressor in models:
 # RMSE: 0.1245 (GBM)
 # RMSE: 0.1391 (XGBoost)
 # RMSE: 0.129 (LightGBM)
+
 
 ########################### Model  ###########################
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.20, random_state = 17)
