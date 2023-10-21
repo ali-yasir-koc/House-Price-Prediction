@@ -88,18 +88,30 @@ columns_info(df)
 df.drop(columns = ["Id"], inplace = True)
 
 df["MSSubClass"] = df["MSSubClass"].astype("object")
+# MSSubClass is a categorical variable representing the housing type. Therefore its type has been changed to object.
+
 df["MoSold"] = df["MoSold"].astype("object")
 df["YrSold"] = df["YrSold"].astype("object")
+# Sales year and month are in categorical format. Therefore the type has been changed to object.
 
 df.loc[df["YearBuilt"] > df["YearRemodAdd"], "YearBuilt"] = df["YearRemodAdd"]
-df.loc[(df["MasVnrType"] == "None") & (df["MasVnrArea"] > 0.0), ["MasVnrArea"]] = 0.0
+# Construction year of houses whose construction year was greater than renovation year was assigned as renovation year
+
+df.loc[(df["MasVnrType"] == "None") & (df["MasVnrArea"] > 0.0), ["MasVnrType"]] = "other"
 df.loc[(df["MasVnrType"].isna()) & (df["MasVnrArea"] > 0.0), ["MasVnrArea"]] = 0.0
+df.loc[df["MasVnrType"].isna(), "MasVnrType"] = "None"
+# Structural arrangements were made regarding the type of wall covering.
+
+
 df.loc[df["GarageYrBlt"] == 2207, "GarageYrBlt"] = 2007
 df.loc[df["GarageYrBlt"].isnull(), "GarageYrBlt"] = 0.0
 df["GarageYrBlt"] = df["GarageYrBlt"].astype("int64")
+# An arrangement was made regarding the garage construction years.
 
 df.loc[df["Functional"].isna(), "Functional"] = "Typ"
+# Fixed as typical if home functionality is empty.
 df.loc[df["SaleType"].isna(), "SaleType"] = "Oth"
+# Fixed as other if sale type is empty.
 
 
 ########################## Grab to Columns ###########################
@@ -163,9 +175,12 @@ def grab_col_names(dataframe, cat_th = 13, car_th = 30):
     print(f'num_but_cat: {len(num_but_cat)}')
     return list(cat_cols), list(num_cols), list(cat_but_car)
 
+# Numeric columns were assigned categorically if their unique values were less than 13.(month is critical value for this)
+# Neighborhood is critical value for cardinal categoric columns.
 
 cat_cols, num_cols, cat_but_car = grab_col_names(df)
 
+# It was aimed to determine hierarchical columns for encoding operations.
 hierarchic_cols = [col for col in cat_cols if col.__contains__("Qu") |
                    (col.__contains__("Cond") & ~col.__contains__("Condition"))]
 
@@ -183,10 +198,10 @@ na_no_cols = ["Alley", "GarageType", "FireplaceQu", "GarageQual", "GarageCond", 
               "BsmtExposure", "BsmtFinType1", "BsmtFinType2", "BsmtQual", "BsmtCond"]
 # Columns whose NA status is significant and NA values will be replaced with No.
 
-for i in na_no_cols:
-    df.loc[df[i].isna(), i] = "No"
+for col in na_no_cols:
+    df.loc[df[col].isna(), col] = "No"
 
-
+# Class numbers and ratios of categorical columns were analyzed.
 def cat_summary(dataframe, col_name, plot = False):
     print(pd.DataFrame({col_name: dataframe[col_name].value_counts(),
                         "Ratio": 100 * dataframe[col_name].value_counts() / len(dataframe)}))
@@ -199,10 +214,11 @@ def cat_summary(dataframe, col_name, plot = False):
 
 for col in cat_cols:
     cat_summary(df, col, True)
+#for col in cat_cols[:3]:
+#    cat_summary(df, col, True)
 
-for col in cat_cols[:3]:
-    cat_summary(df, col, True)
 
+# Descriptive statistical analysis of numerical columns was performed and histograms were drawn.
 def num_summary(dataframe, numerical_col, plot = False):
     quantiles = [0.05, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 0.95, 0.99]
     print(dataframe[numerical_col].describe(quantiles).T)
@@ -216,8 +232,8 @@ def num_summary(dataframe, numerical_col, plot = False):
 
 for col in num_cols:
     num_summary(df, col, plot = True)
-for col in num_cols[:3]:
-    num_summary(df, col, plot = True)
+#for col in num_cols[:3]:
+#    num_summary(df, col, plot = True)
 
 
 ########################## Target Analysis ###########################
@@ -263,6 +279,7 @@ for col in num_cols:
 for col in num_cols:
     print(check_outlier(df, col))
 
+# Threshold values were determined for numerical values and outliers were replaced with threshold values.
 
 ########################## Missing Value Analysis ###########################
 def missing_values_table(dataframe, na_name = False):
@@ -280,7 +297,9 @@ def missing_values_table(dataframe, na_name = False):
 na_cols = missing_values_table(df, True)
 
 drop_cols = ["PoolQC", "MiscFeature"]
+# Missing value ratios 99.66, 96.40
 df.drop(columns = drop_cols, inplace = True)
+
 cat_cols = [col for col in cat_cols if col not in drop_cols]
 non_hierarchic_cols = [col for col in non_hierarchic_cols if col not in drop_cols]
 na_cols = [col for col in na_cols if col not in drop_cols]
@@ -306,7 +325,7 @@ missing_vs_target(df, "SalePrice", na_cols)
 missing_vs_target(df, "SalePrice", ["LotFrontage"])
 
 df_clean = df.copy()
-na_cols = na_cols[:-1]
+na_cols = na_cols[:-1]   # Sale Price is  not included.
 
 objects = [col for col in na_cols if df_clean[col].dtype == "object"]
 for col in objects:
@@ -315,6 +334,8 @@ for col in objects:
 no_objects = [col for col in na_cols if col not in objects]
 for col in no_objects:
     df_clean.loc[df_clean[col].isna(), col] = df_clean[col].median()
+
+# Missing values in object columns were filled with mode, and missing values in numeric columns were filled with median.
 
 missing_values_table(df_clean, True)
 
@@ -381,6 +402,8 @@ def rare_encoder(dataframe, rare_perc):
 
     return temp_df
 
+# Among the classes of categorical columns,
+# those with a ratio lower than 0.01 were collected and assigned to the rare class.
 
 df_clean = rare_encoder(df_clean, 0.01)
 df_clean.head()
@@ -484,7 +507,7 @@ new_df.head()
 new_df.shape
 
 new_df.info()
-
+# All columns were transformed to numeric values.
 
 ########################## Standardization ###########################
 standard_col = [col for col in new_df.columns if new_df[col].dtype not in ["int32", "int64", "uint8"]
@@ -500,6 +523,7 @@ for col in standard_col:
 new_df.head()
 
 new_df["SalePrice"] = np.log(new_df["SalePrice"])
+# Logarithmic transformation was applied to the sales price column.
 
 
 ########################## Test Train Split ###########################
@@ -533,7 +557,6 @@ for name, regressor in models:
 # RMSE: 0.1391 (XGBoost)
 # RMSE: 0.129 (LightGBM)
 
-
 ########################### Model  ###########################
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.20, random_state = 17)
 
@@ -559,7 +582,7 @@ y.std()
 ########################### Hyperparameter Optimization ###########################
 lgbm_params = {"learning_rate": [0.01, 0.05, 0.1, 0.2, 0.25],
                "n_estimators": [500, 1000, 1500, 2000, 2500],
-               "colsample_bytree": [0.5, 0.7, 1]
+               "colsample_bytree": [ 0.5, 0.7, 1]
                }
 
 lgbm_gs_best = GridSearchCV(lgbm_model,
